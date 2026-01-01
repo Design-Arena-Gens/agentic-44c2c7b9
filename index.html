@@ -1,0 +1,420 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Professional Text to Speech</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .container {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            padding: 40px;
+            max-width: 700px;
+            width: 100%;
+        }
+
+        h1 {
+            color: #333;
+            margin-bottom: 10px;
+            font-size: 2.5em;
+            text-align: center;
+        }
+
+        .subtitle {
+            color: #666;
+            text-align: center;
+            margin-bottom: 30px;
+            font-size: 1.1em;
+        }
+
+        textarea {
+            width: 100%;
+            min-height: 200px;
+            padding: 15px;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            font-size: 16px;
+            font-family: inherit;
+            resize: vertical;
+            transition: border-color 0.3s;
+        }
+
+        textarea:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .controls {
+            margin-top: 20px;
+            display: grid;
+            gap: 15px;
+        }
+
+        .control-group {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        label {
+            color: #555;
+            font-weight: 600;
+            font-size: 14px;
+        }
+
+        select, input[type="range"] {
+            padding: 10px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 16px;
+            background: white;
+            cursor: pointer;
+        }
+
+        input[type="range"] {
+            cursor: pointer;
+        }
+
+        .range-value {
+            display: inline-block;
+            min-width: 40px;
+            color: #667eea;
+            font-weight: 600;
+        }
+
+        .button-group {
+            display: flex;
+            gap: 10px;
+            margin-top: 20px;
+        }
+
+        button {
+            flex: 1;
+            padding: 15px 30px;
+            font-size: 18px;
+            font-weight: 600;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+
+        button.primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        button.primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(102, 126, 234, 0.3);
+        }
+
+        button.secondary {
+            background: #f5f5f5;
+            color: #333;
+        }
+
+        button.secondary:hover {
+            background: #e0e0e0;
+        }
+
+        button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none !important;
+        }
+
+        .icon {
+            font-size: 20px;
+        }
+
+        .status {
+            margin-top: 15px;
+            padding: 12px;
+            border-radius: 8px;
+            text-align: center;
+            font-weight: 500;
+            display: none;
+        }
+
+        .status.show {
+            display: block;
+        }
+
+        .status.playing {
+            background: #e8f5e9;
+            color: #2e7d32;
+        }
+
+        .status.error {
+            background: #ffebee;
+            color: #c62828;
+        }
+
+        @media (max-width: 600px) {
+            .container {
+                padding: 25px;
+            }
+
+            h1 {
+                font-size: 2em;
+            }
+
+            .button-group {
+                flex-direction: column;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🎙️ Text to Speech</h1>
+        <p class="subtitle">Professional voice reader powered by your browser</p>
+
+        <textarea id="textInput" placeholder="Enter or paste your text here...">Welcome to the professional text to speech application. This tool uses advanced browser technology to convert your text into natural-sounding speech. Try adjusting the voice, speed, and pitch to customize your experience.</textarea>
+
+        <div class="controls">
+            <div class="control-group">
+                <label for="voiceSelect">Voice:</label>
+                <select id="voiceSelect">
+                    <option value="">Loading voices...</option>
+                </select>
+            </div>
+
+            <div class="control-group">
+                <label for="rateRange">Speed: <span class="range-value" id="rateValue">1.0</span>x</label>
+                <input type="range" id="rateRange" min="0.5" max="2" step="0.1" value="1">
+            </div>
+
+            <div class="control-group">
+                <label for="pitchRange">Pitch: <span class="range-value" id="pitchValue">1.0</span></label>
+                <input type="range" id="pitchRange" min="0.5" max="2" step="0.1" value="1">
+            </div>
+        </div>
+
+        <div class="button-group">
+            <button class="primary" id="speakBtn">
+                <span class="icon">▶️</span>
+                <span>Speak</span>
+            </button>
+            <button class="secondary" id="pauseBtn" disabled>
+                <span class="icon">⏸️</span>
+                <span>Pause</span>
+            </button>
+            <button class="secondary" id="stopBtn" disabled>
+                <span class="icon">⏹️</span>
+                <span>Stop</span>
+            </button>
+        </div>
+
+        <div class="status" id="status"></div>
+    </div>
+
+    <script>
+        const textInput = document.getElementById('textInput');
+        const voiceSelect = document.getElementById('voiceSelect');
+        const rateRange = document.getElementById('rateRange');
+        const pitchRange = document.getElementById('pitchRange');
+        const rateValue = document.getElementById('rateValue');
+        const pitchValue = document.getElementById('pitchValue');
+        const speakBtn = document.getElementById('speakBtn');
+        const pauseBtn = document.getElementById('pauseBtn');
+        const stopBtn = document.getElementById('stopBtn');
+        const status = document.getElementById('status');
+
+        let voices = [];
+        let currentUtterance = null;
+        let isPaused = false;
+
+        // Load voices
+        function loadVoices() {
+            voices = speechSynthesis.getVoices();
+
+            if (voices.length === 0) {
+                return;
+            }
+
+            // Sort voices to prioritize professional-sounding ones
+            const priorityVoices = voices.filter(voice =>
+                voice.name.includes('Google') ||
+                voice.name.includes('Microsoft') ||
+                voice.name.includes('Premium') ||
+                voice.name.includes('Natural')
+            );
+
+            const otherVoices = voices.filter(voice =>
+                !priorityVoices.includes(voice)
+            );
+
+            const sortedVoices = [...priorityVoices, ...otherVoices];
+
+            voiceSelect.innerHTML = '';
+
+            sortedVoices.forEach((voice, index) => {
+                const option = document.createElement('option');
+                option.value = index;
+                option.textContent = `${voice.name} (${voice.lang})`;
+
+                // Mark high-quality voices
+                if (voice.name.includes('Google') || voice.name.includes('Premium')) {
+                    option.textContent += ' ⭐';
+                }
+
+                voiceSelect.appendChild(option);
+            });
+
+            // Select first English voice by default
+            const englishVoiceIndex = sortedVoices.findIndex(voice =>
+                voice.lang.startsWith('en')
+            );
+            if (englishVoiceIndex !== -1) {
+                voiceSelect.value = englishVoiceIndex;
+            }
+        }
+
+        // Load voices on page load and when they change
+        loadVoices();
+        if (speechSynthesis.onvoiceschanged !== undefined) {
+            speechSynthesis.onvoiceschanged = loadVoices;
+        }
+
+        // Update range displays
+        rateRange.addEventListener('input', () => {
+            rateValue.textContent = rateRange.value;
+        });
+
+        pitchRange.addEventListener('input', () => {
+            pitchValue.textContent = pitchRange.value;
+        });
+
+        // Show status message
+        function showStatus(message, type) {
+            status.textContent = message;
+            status.className = 'status show ' + type;
+        }
+
+        function hideStatus() {
+            status.className = 'status';
+        }
+
+        // Speak button
+        speakBtn.addEventListener('click', () => {
+            const text = textInput.value.trim();
+
+            if (!text) {
+                showStatus('Please enter some text first', 'error');
+                return;
+            }
+
+            // Cancel any ongoing speech
+            speechSynthesis.cancel();
+
+            currentUtterance = new SpeechSynthesisUtterance(text);
+
+            // Get selected voice
+            const selectedVoice = voices[voiceSelect.value];
+            if (selectedVoice) {
+                currentUtterance.voice = selectedVoice;
+            }
+
+            currentUtterance.rate = parseFloat(rateRange.value);
+            currentUtterance.pitch = parseFloat(pitchRange.value);
+
+            currentUtterance.onstart = () => {
+                showStatus('Speaking...', 'playing');
+                speakBtn.disabled = true;
+                pauseBtn.disabled = false;
+                stopBtn.disabled = false;
+                isPaused = false;
+            };
+
+            currentUtterance.onend = () => {
+                showStatus('Finished speaking', 'playing');
+                setTimeout(hideStatus, 2000);
+                speakBtn.disabled = false;
+                pauseBtn.disabled = true;
+                stopBtn.disabled = true;
+                isPaused = false;
+            };
+
+            currentUtterance.onerror = (event) => {
+                showStatus('Error: ' + event.error, 'error');
+                speakBtn.disabled = false;
+                pauseBtn.disabled = true;
+                stopBtn.disabled = true;
+            };
+
+            speechSynthesis.speak(currentUtterance);
+        });
+
+        // Pause button
+        pauseBtn.addEventListener('click', () => {
+            if (isPaused) {
+                speechSynthesis.resume();
+                pauseBtn.innerHTML = '<span class="icon">⏸️</span><span>Pause</span>';
+                showStatus('Resumed...', 'playing');
+                isPaused = false;
+            } else {
+                speechSynthesis.pause();
+                pauseBtn.innerHTML = '<span class="icon">▶️</span><span>Resume</span>';
+                showStatus('Paused', 'playing');
+                isPaused = true;
+            }
+        });
+
+        // Stop button
+        stopBtn.addEventListener('click', () => {
+            speechSynthesis.cancel();
+            showStatus('Stopped', 'playing');
+            setTimeout(hideStatus, 2000);
+            speakBtn.disabled = false;
+            pauseBtn.disabled = true;
+            stopBtn.disabled = true;
+            isPaused = false;
+            pauseBtn.innerHTML = '<span class="icon">⏸️</span><span>Pause</span>';
+        });
+
+        // Keyboard shortcuts
+        document.addEventListener('keydown', (e) => {
+            if (e.ctrlKey || e.metaKey) {
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+                    if (!speakBtn.disabled) {
+                        speakBtn.click();
+                    }
+                } else if (e.key === ' ') {
+                    e.preventDefault();
+                    if (!pauseBtn.disabled) {
+                        pauseBtn.click();
+                    }
+                }
+            } else if (e.key === 'Escape') {
+                if (!stopBtn.disabled) {
+                    stopBtn.click();
+                }
+            }
+        });
+    </script>
+</body>
+</html>
